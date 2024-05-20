@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+    <head>
+        <title>Cross-Browser QRCode generator for Javascript</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width,initial-scale=1,user-scalable=no"
+        />
+        <script type="text/javascript" src="jquery.min.js"></script>
+        <script type="text/javascript" src="qrcode.js"></script>
+    </head>
+    <body>
+        <input
+            id="text"
+            type="text"
+            value="Place link here..."
+            style="width: 80%"
+        /><br />
+        <div
+            id="qrcode"
+            style="width: 100px; height: 100px; margin-top: 15px"
+        ></div>
+
+        <script type="text/javascript">
+            var qrcode = new QRCode(document.getElementById("qrcode"), {
+                width: 100,
+                height: 100,
+            });
+
+            function makeCode() {
+                var elText = document.getElementById("text");
+
+                if (!elText.value) {
+                    alert("Input a text");
+                    elText.focus();
+                    return;
+                }
+
+                qrcode.makeCode(elText.value);
+            }
+
+            makeCode();
+            // getURL();
+
+            $("#text")
+                .on("blur", function () {
+                    makeCode();
+                    // getURL();
+                })
+                .on("keydown", function (e) {
+                    if (e.keyCode == 13) {
+                        makeCode();
+                        getURL();
+                    }
+                });
+
+            function getURL() {
+                var image = document.querySelector("img").getAttribute("src");
+                // console.log(image);
+                downloadImage(image);
+            }
+
+            function downloadImage(base64Image) {
+                // Create a temporary link element
+                var link = document.createElement("a");
+                link.href = base64Image; // Replace 'png' with appropriate format
+                link.download = "image.png"; // Set the desired file name
+
+                // Trigger the click event to download the image
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            function generateCodes(amount = 10) {
+                const codes = new Set();
+                while (codes.size < 10) {
+                    let code = "";
+                    for (let j = 0; j < 5; j++) {
+                        code += Math.floor(Math.random() * amount);
+                    }
+                    codes.add(code);
+                }
+                return Array.from(codes);
+            }
+
+            function makeQrFromCodes() {
+                const codes = generateCodes(10);
+                for (let code of codes) {
+                    qrcode.makeCode(code);
+                    getURL();
+                }
+            }
+
+            window.onload = function () {
+                makeQrFromCodes();
+            };
+        </script>
+    </body>
+</html>
