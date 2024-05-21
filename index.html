@@ -1,5 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>Cross-Browser QRCode generator for Javascript</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -80,7 +80,6 @@
             async function downloadAll(elements) {
                 var count = 0;
                 var link = document.createElement("a");
-
                 for (var e in elements) {
                     link.href = elements[e];
                     link.download = "image.png"; // Replace 'png' with appropriate format
@@ -99,14 +98,16 @@
                 const body = document.querySelector("body");
                 const codes = generateCodes(100);
                 for (let code of codes) {
-                    qrcode.makeCode(`${code}`);
+                    qrcode.makeCode(code);
                     getURL();
                 }
-                // downloadAll(list);
+                downloadAll(list);
                 generateCodeList(codes);
             }
 
             window.onload = function () {
+                alert("Click ok to download QRCodes")
+                // prompt('Want to download codes ?')
                 makeQrFromCodes();
             };
         </script>
