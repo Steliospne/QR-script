@@ -1,120 +1,156 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <title>Cross-Browser QRCode generator for Javascript</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta
-            name="viewport"
-            content="width=device-width,initial-scale=1,user-scalable=no"
-        />
-        <script type="text/javascript" src="jquery.min.js"></script>
-        <script type="text/javascript" src="qrcode.js"></script>
-    </head>
-    <body>
+  <head>
+    <title>Cross-Browser QRCode generator for Javascript</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,user-scalable=no"
+    />
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="qrcode.js"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div>
+      <h1>Make QR codes on demand</h1>
+      <div>
+        <label for="amount">Number of codes:</label>
+        <input type="text" name="amount" id="amount" />
+      </div>
+      <div>
+        <label for="list">Existing code list:</label>
+        <textarea name="list" id="list"></textarea>
+      </div>
+      <div>
+        <button class="download">Download</button>
+      </div>
+    </div>
 
+    <script type="text/javascript">
+      // NOTES
+      // 1) clean the script
+      // 2) create a button for downloading
+      // 3) add input for the number of codes
+      // 4) add input for the number of digits
 
-        <script type="text/javascript">
+      const BASE_URL = "http://localhost:8080/?";
+      const downloadButton = document.querySelector(".download");
+      const dummyEl = document.createElement("div");
 
-            // NOTES
-            // 1) clean the script
-            // 2) create a button for downloading
-            // 3) add input for the number of codes
-            // 4) add input for the number of digits 
-            const dummyEl = document.createElement("div")
-            dummyEl.setAttribute('id','qrcode')
-            console.log(dummyEl);
-            var qrcode = new QRCode(dummyEl, {
-                width: 100,
-                height: 100,
-            });
-            console.log(qrcode)
-            let list = [];
-            qrcode.makeCode("");
+      dummyEl.setAttribute("id", "qrcode");
 
-            function getURL() {
-                var imageURL = qrcode._oDrawing._elImage.src
-                list.push(imageURL);
+      var qrcode = new QRCode(dummyEl, {
+        width: 90,
+        height: 90,
+      });
+
+      let list = [];
+      qrcode.makeCode("");
+
+      function getURL() {
+        var imageURL = qrcode._oDrawing._elImage.src;
+        list.push(imageURL);
+      }
+
+      function generateCodes(amount = 10, existingList = []) {
+        let codes = new Set();
+        const outputURLs = new Set();
+        if (existingList.length !== 0) {
+          codes = new Set(existingList);
+          newAmount = amount + existingList.length;
+          while (codes.size < newAmount) {
+            let code = "";
+            for (let j = 0; j < 5; j++) {
+              code += Math.floor(Math.random() * 5);
             }
+            codes.add(code);
+            outputURLs.add(BASE_URL + code);
+          }
+          const newURLs = Array.from(outputURLs).slice(-amount);
+          console.log(newURLs);
+          generateCodeList(codes);
+          return newURLs;
+        }
+        while (codes.size < amount) {
+          let code = "";
+          for (let j = 0; j < 5; j++) {
+            code += Math.floor(Math.random() * 5);
+          }
+          codes.add(code);
+          outputURLs.add(BASE_URL + code);
+        }
+        generateCodeList(codes);
+        return Array.from(outputURLs);
+      }
 
-            function generateCodes(amount = 10) {
-                const codes = new Set();
-                while (codes.size < amount) {
-                    let code = "";
-                    for (let j = 0; j < 5; j++) {
-                        code += Math.floor(Math.random() * 5);
-                    }
-                    codes.add(code);
-                }
-                return Array.from(codes);
-            }
-            
-            function generateCodeList(codeList) {
-                // Step 1: Create the content for the text file
-                let content = "";
-                for (let item of codeList) {
-                    content += `${item}\n`
-                }
-                // Step 2: Create a Blob from the content
-                const blob = new Blob([content], {
-                    type: "text/plain",
-                });
+      function generateCodeList(codeList) {
+        // Step 1: Create the content for the text file
+        let content = "";
+        for (let item of codeList) {
+          content += `${item}\n`;
+        }
+        // Step 2: Create a Blob from the content
+        const blob = new Blob([content], {
+          type: "text/plain",
+        });
 
-                // Step 3: Create a link element
-                const a = document.createElement("a");
+        // Step 3: Create a link element
+        const a = document.createElement("a");
 
-                // Step 4: Set the link to point to the Blob object
-                const url = URL.createObjectURL(blob);
-                a.href = url;
-                a.download = "code_list.txt"; // The name of the file to be downloaded
+        // Step 4: Set the link to point to the Blob object
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = "code_list.txt"; // The name of the file to be downloaded
 
-                // Step 5: Trigger a click on the link to prompt the download
-                document.body.appendChild(a); // Append the link to the body
-                a.click(); // Programmatically click the link
-                document.body.removeChild(a); // Remove the link from the body
+        // Step 5: Trigger a click on the link to prompt the download
+        document.body.appendChild(a); // Append the link to the body
+        a.click(); // Programmatically click the link
+        document.body.removeChild(a); // Remove the link from the body
 
-                // Optionally, revoke the object URL to free up memory
-                URL.revokeObjectURL(url);
-            }
+        // Optionally, revoke the object URL to free up memory
+        URL.revokeObjectURL(url);
+      }
 
-            function pause(msec) {
-                return new Promise((resolve, reject) => {
-                    setTimeout(resolve, msec || 1000);
-                });
-            }
+      function pause(msec) {
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, msec || 1000);
+        });
+      }
 
-            async function downloadAll(elements) {
-                var count = 0;
-                var link = document.createElement("a");
-                for (var e in elements) {
-                    link.href = elements[e];
-                    link.download = "image.png"; // Replace 'png' with appropriate format
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+      async function downloadAll(elements) {
+        var count = 0;
+        let count_2 = 0;
+        var link = document.createElement("a");
+        for (var e in elements) {
+          link.href = elements[e];
+          link.download = count_2 + "image.png"; // Replace 'png' with appropriate format
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          count_2++;
+          if (++count >= 9) {
+            await pause(1000);
+            count = 0;
+          }
+        }
+      }
 
-                    if (++count >= 9) {
-                        await pause(1000);
-                        count = 0;
-                    }
-                }
-            }
-
-            function makeQrFromCodes() {
-                const body = document.querySelector("body");
-                const codes = generateCodes(100);
-                for (let code of codes) {
-                    qrcode.makeCode(code);
-                    getURL();
-                }
-                downloadAll(list);
-                generateCodeList(codes);
-            }
-
-            window.onload = function () {
-                alert("Click ok to download QRCodes")
-                // prompt('Want to download codes ?')
-                makeQrFromCodes();
-            };
-        </script>
-    </body>
+      window.onload = function () {
+        downloadButton.addEventListener("click", () => {
+          const amount = +document.querySelector("#amount").value;
+          var existingList = document.querySelector("#list").value.split("\n");
+          const codes = generateCodes(amount, existingList);
+          for (let code of codes) {
+            qrcode.makeCode(code);
+            getURL();
+          }
+          downloadAll(list);
+        });
+        // document.querySelector("#list").addEventListener("input", () => {
+        //   var existingList = document.querySelector("#list").value.split("\n");
+        // });
+      };
+    </script>
+  </body>
 </html>
