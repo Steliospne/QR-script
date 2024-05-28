@@ -27,13 +27,13 @@
       </div>
     </div>
 
-    <script type="text/javascript">
+    <script type="module">
       // NOTES
       // 1) clean the script
       // 2) create a button for downloading
       // 3) add input for the number of codes
-      // 4) add input for the number of digits
-
+      // 4) add input for the number of digits  
+      import { v4 as uuidv4 } from 'https://jspm.dev/uuid';
       const BASE_URL = "http://localhost:8080/?";
       const downloadButton = document.querySelector(".download");
       const dummyEl = document.createElement("div");
@@ -54,45 +54,47 @@
       }
 
       function generateCodes(amount = 10, existingList = []) {
-        let codes = new Set();
-        const outputURLs = new Set();
-        if (existingList.length !== 0) {
-          codes = new Set(existingList);
-          newAmount = amount + existingList.length;
-          while (codes.size < newAmount) {
-            let code = "";
-            for (let j = 0; j < 5; j++) {
-              code += Math.floor(Math.random() * 5);
-            }
-            codes.add(code);
-            outputURLs.add(BASE_URL + code);
-          }
-          const newURLs = Array.from(outputURLs).slice(-amount);
-          console.log(newURLs);
-          generateCodeList(codes);
-          return newURLs;
-        }
-        while (codes.size < amount) {
-          let code = "";
-          for (let j = 0; j < 5; j++) {
-            code += Math.floor(Math.random() * 5);
-          }
-          codes.add(code);
-          outputURLs.add(BASE_URL + code);
+        let codes = [];
+        let outputURLs = [];
+        for (let i = 0; i < amount; i++) {
+          
+          let hash = uuidv4();
+          codes.push(hash);
+          outputURLs.push(BASE_URL + hash);
+
         }
         generateCodeList(codes);
-        return Array.from(outputURLs);
+        return outputURLs;
       }
 
       function generateCodeList(codeList) {
         // Step 1: Create the content for the text file
-        let content = "";
+        let content = "[";
         for (let item of codeList) {
-          content += `${item}\n`;
+          if (item == codeList[codeList.length - 1]) {
+            content += `
+  {
+    "name" : "",
+    "email" : "",
+    "phone" : null,
+    "code" : "${item}",
+    "visited" : false,
+  }
+]`;
+            break;
+          }
+          content += `
+  {
+    "name" : "",
+    "email" : "",
+    "phone" : null,
+    "code" : "${item}",
+    "visited" : false,
+  },`;
         }
         // Step 2: Create a Blob from the content
         const blob = new Blob([content], {
-          type: "text/plain",
+          type: "application/json",
         });
 
         // Step 3: Create a link element
@@ -101,7 +103,7 @@
         // Step 4: Set the link to point to the Blob object
         const url = URL.createObjectURL(blob);
         a.href = url;
-        a.download = "code_list.txt"; // The name of the file to be downloaded
+        a.download = "code_list.json"; // The name of the file to be downloaded
 
         // Step 5: Trigger a click on the link to prompt the download
         document.body.appendChild(a); // Append the link to the body
